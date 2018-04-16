@@ -27,4 +27,4 @@ Adding a new level of internal management simply won't cut it. Many applications
 
 Now we have a whole new raft of features - features you couldn't possibly incorporate into the "Quiz-maker-maker". Time billing, invoices, support tickets, cloud storage! Our consultancy can create and track multiple "Quiz-maker-maker" projects within the confines of a simple application. Due to the CEO's previous experience working for a domain registrar, the organisation abhors the use of hyphens, so they name this application "Quizmakermakermaker":
 
-![Quizmakermakermaker](https://github.com/Oreon93/Quizmakermakermaker/quizmakermakermaker.png "Quizmakermakermaker logo")
+![Quizmakermakermaker](https://github.com/Oreon93/Quizmakermakermaker/blob/master/quizmakermakermaker.png "Quizmakermakermaker logo")
