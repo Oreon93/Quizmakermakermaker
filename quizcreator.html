@@ -10,6 +10,7 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="jquery-ui.css">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
   <link rel="stylesheet" href="quizcreator.css">
   <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css?family=Faster+One" rel="stylesheet">
@@ -20,23 +21,25 @@
   <title>Quiz Creator</title>
 </html>
 <body>
-  <div class="title">
+  <div class="title" id="logo">
 
   <h1 class="logo"><img src="quizicon.png" class="logo-icon">QuizMaker</h1>
   </div>
   <div class="quiz-container">
 
     <div id="menu" class="menu hidden">
+      <p id="quizname" class="menu-item"></p>
       <a href="#" id="manage-questions"><p class="menu-item">Manage questions</p></a>
       <a href="#" id="add-question"><p class="menu-item">Add question</p></a>
-      <a href="#" id="play-quiz"><p class="menu-item play-quiz">Play Quiz!</p></a>
+      <a href="#" id="play-quiz"><p class="menu-item play-quiz-btn">Play Quiz!</p></a>
     </div>
     <div id="interface">
       <h2>Welcome to QuizMaker!</h2>
-      <p class="welcome-text">Please enter the name of your quiz: </p>
-      <form class="welcome-page">
-        <input type="text" id="quiz-name-field">
-        <button id="create-quiz" type="button" class="btn btn-lg btn-primary">Let's go!</button>
+      <form id="login-form" class="login-page">
+        <p>Don't have an account? <a href="#" id="register-link">Register now</a>.</p>
+        <input class="username-input" type="username" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button id="login-btn" type="button" class="btn btn-lg btn-primary full-width-btn">Login</button>
       </form>
 
     </div>

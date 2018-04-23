@@ -47,6 +47,12 @@ a:hover {
 
 #interface {
   padding: 10px;
+  opacity: 1;
+  transition: opacity 1s ease-in;
+}
+
+#interface.faded-out {
+  opacity: 0;
 }
 
 .welcome-text {
@@ -54,14 +60,30 @@ a:hover {
   text-align: center;
 }
 
-.welcome-page {
+.login-page {
   max-width: 300px;
   text-align: center;
   margin: 20px auto;
 }
 
-.welcome-page button {
+.full-width-btn {
   width: 100%;
+  margin: 5px 0px;
+}
+
+.login-page input {
+  font-size: 1em;
+}
+
+.input-error {
+  border: 1px solid #d14f4f;
+  background-color: #edc0c0;
+}
+
+.error-message {
+  text-align: left;
+  margin-bottom: 0;
+  color: #d14f4f;
 }
 
 .hidden {
@@ -70,6 +92,37 @@ a:hover {
 
 .faded-out {
   opacity: 0;
+}
+
+.empty-box {
+  padding: 40px;
+  background-color: #f0f0f0;
+  text-align: center;
+  color: #666;
+  font-weight: bold;
+}
+
+.empty-logo {
+  width: 128px;
+}
+
+.modal-background {
+  width: 100vw;
+  height: 100vw;
+  background-color: rgba(0,0,0, 0.4);
+  position:fixed;
+  top: 0;
+}
+
+.modal-window {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  background-color: #fff;
+  border-radius: 10px;
+  /* bring your own prefixes */
+  transform: translate(-50%, -50%);
+  padding: 40px;
 }
 
 .new-answer-row {
@@ -128,8 +181,9 @@ input:focus, textarea:focus {
 }
 
 .btn-secondary {
-  background-color: #59ad6e;
+  background-color: #77afa6;
   color: #fff;
+  border: 0px;
 }
 
 .btn-primary:hover {
@@ -147,6 +201,7 @@ input:focus, textarea:focus {
   color: #fff;
   padding: 10px;
   margin: 0;
+  cursor: pointer;
 }
 
 .logo-icon {
@@ -173,7 +228,12 @@ input:focus, textarea:focus {
   color: #fff;
 }
 
-.play-quiz {
+.item-action {
+  cursor: pointer;
+  color: #136f61;
+}
+
+.play-quiz-btn {
   float: right;
   background-color: #328a48;
   border-radius: 15px;
@@ -237,6 +297,9 @@ input:focus, textarea:focus {
   clear: both;
   width: 100%;
   indent: none;
+}
+
+.draggable {
   cursor: move;
 }
 
@@ -248,6 +311,14 @@ input:focus, textarea:focus {
   padding: 10px;
   float:left;
   margin-bottom: 0;
+}
+
+.list-buttons {
+  float: right;
+}
+
+.far {
+  padding: 0px 4px;
 }
 
 .question-number {
