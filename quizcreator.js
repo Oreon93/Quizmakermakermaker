@@ -13,39 +13,51 @@ function QuizQuestion(question, correctAnswer, answers) {
   this.answers = answers;
 }
 
-
+/* Key gloabl varaiables */
+var localStorageUsers = JSON.parse(localStorage.users);
+var currentUser = "";
+var currentQuizIndex = "";
+var theInterface = document.getElementById("interface");
+var eventListeners = [];
+var textValues = {
+  "btn-default": "Default button text",
+  "btn-next-question": "Next",
+  "btn-previous-question": "Previous",
+  "btn-create-new-quiz": "Create new quiz",
+  "btn-create-first-quiz": "Create your first quiz!",
+  "btn-confirm-create-quiz": "Create quiz",
+  "btn-delete-confirm": "Yes, delete",
+  "btn-delete-cancel": "Cancel"
+}
 
 window.onload = function() {
-  /* Key gloabl varaiables */
-  var localStorageUsers = JSON.parse(localStorage.users);
-  var currentUser = "";
-  var currentQuizIndex = "";
-  var theInterface = document.getElementById("interface");
 
   /* Menu items */
   document.getElementById("logo").addEventListener("click", quizView);
   document.getElementById("manage-questions").addEventListener("click", displayQuestionList);
   document.getElementById("add-question").addEventListener("click", displayAddQuestionForm);
-  document.getElementById("play-quiz").addEventListener("click", playQuiz);
 
   /* Buttons */
   theInterface.addEventListener("click", function(event) {
+    if (event.target && event.target.classList.contains("quiz-action")) {getItem("currentQuizIndex");};
+    if (event.target && event.target.id == "play-quiz") {playQuiz();}
+    if (event.target && event.target.id == "edit-quiz") {displayQuestionList();}
+    if (event.target && event.target.id == "delete-quiz") {deleteConfirm();}
     if (event.target && event.target.id == "register-link") {registerLink();}
     if (event.target && event.target.id == "login-btn") {loginBtn();}
     if (event.target && event.target.classList.contains("submit-question")) {submitQuestion(event);}
     if (event.target && event.target.id == "add-answer") {addAnswer();}
     if (event.target && event.target.classList.contains("quiz-answer")) {toggleChecked();}
     if (event.target && event.target.id == "add-new-quiz") { nameQuiz(); };
-    if (event.target && event.target.classList.contains("play-quiz")) { playQuizOption(); };
-    if (event.target && event.target.classList.contains("edit-quiz")) { editQuiz(); };
-    if (event.target && event.target.classList.contains("delete-quiz")) { deleteQuiz(); };
     if (event.target && event.target.id == "back-to-quiz-list") { quizView(); };
   });
 
   document.body.addEventListener("click", function(event) {
-    if (event.target && event.target.id == "confirm-delete-quiz") { deleteConfirm(); };
-    if (event.target && event.target.id == "cancel-delete-quiz") { deleteModal(); };
     if (event.target && event.target.id == "create-quiz") {createQuiz();}
+    for (var i = 0; i < eventListeners.length; i++) {
+      var callback = eventListeners[i][1], target = eventListeners[i][2], callbackArguments = eventListeners[i][3];
+      if (event.target && event.target.id == eventListeners[i][0]) {callback.apply(target, callbackArguments)};
+    }
   });
 
   /* REGISTRATION AND LOGIN FUNCTIONALITY
@@ -61,21 +73,21 @@ window.onload = function() {
     });
     if (user.length == 1 && user[0].password == pass) {
       currentUser = user[0];
-      console.log(currentUser.quizzes.length);
       smoothFade(quizView);
     }
     else {
       // Account not found message
       var existingMessage = document.getElementById("not-found");
       if (!existingMessage) {
-        var notFound = document.createElement("p");
         var form = document.getElementById("login-form");
+        var notFound = document.createElement("p");
         notFound.id = "not-found";
         notFound.innerHTML = "Sorry, there is no account with those details";
         form.appendChild(notFound);
       }
     }
   }
+
   function registerLink() {
     var passConf = document.createElement("input"), createAct = document.createElement("button");
     var form = document.getElementById("login-form");
@@ -92,7 +104,7 @@ window.onload = function() {
 
     createAct.type = "button";
     createAct.id = "create-account";
-    createAct.classList.add("btn", "btn-lg", "btn-primary", "full-width-btn");
+    createAct.classList.add("btn", "btn-lg", "btn-primary", "btn-full-width");
     createAct.innerHTML = "Create account";
     form.appendChild(createAct);
 
@@ -156,7 +168,6 @@ window.onload = function() {
     if (currentUser) {
     /* Hide menu */
       document.getElementById("menu").classList.add("hidden");
-
       clearInterface(theInterface);
 
       var welcomeMsg = document.createElement("p");
@@ -174,38 +185,33 @@ window.onload = function() {
   }
   function generateEmptyList() {
     // Create and define elements
-    var emptyBox = document.createElement("div"), emptyLogo = document.createElement("img"), emptyText = document.createElement("p"), createQuizBtn = document.createElement("button");
+    var emptyBox = document.createElement("div"),
+        emptyLogo = document.createElement("img"),
+        emptyText = document.createElement("p"),
+        createQuizBtn;
     emptyBox.classList.add("empty-box");
     emptyLogo.src = "empty-logo.png";
     emptyLogo.classList.add("empty-logo");
     emptyText.innerHTML = "You have no quizzes yet!";
-    createQuizBtn.type = "button";
-    createQuizBtn.id = "add-new-quiz";
-    createQuizBtn.classList.add("btn", "btn-lg", "btn-primary");
-    createQuizBtn.innerHTML = "Create your first quiz!";
-
-    emptyBox.appendChild(emptyLogo);
-    emptyBox.appendChild(emptyText);
-    emptyBox.appendChild(createQuizBtn);
+    createQuizBtn = createButton({
+      color: "primary",
+      size: "large",
+      text: "btn-create-first-quiz",
+      action: nameQuiz,
+    });
+    appendMultipleNodes(emptyBox, emptyLogo, emptyText, createQuizBtn)
     theInterface.appendChild(emptyBox);
   }
   function generateQuizList() {
     var list = document.createElement("ul");
 
-
-    var createQuizBtn = document.createElement("button");
-
     list.classList.add("question-list");
     list.id = "quiz-list";
-    createQuizBtn.type = "button";
-    createQuizBtn.id = "add-new-quiz";
-    createQuizBtn.classList.add("btn", "btn-lg", "btn-primary");
-    createQuizBtn.innerHTML = "Create new quiz";
     for (var i=0; i<currentUser.quizzes.length; i++) {
-      var row = document.createElement("li");
-      var quizText = document.createElement("p");
-      var buttons = document.createElement("p");
-      buttons.innerHTML = "<i class='fas fa-gamepad play-quiz item-action' title='Play quiz'></i><i class='far fa-edit edit-quiz item-action'  title='Edit quiz'></i><i class='fas fa-trash delete-quiz item-action'  title='Delete quiz'></i>";
+      var row = document.createElement("li"),
+          quizText = document.createElement("p"),
+          buttons = document.createElement("p");
+      buttons.innerHTML = "<i id='play-quiz' class='fas fa-gamepad quiz-action' title='Play quiz'></i><i id='edit-quiz' class='far fa-edit quiz-action'  title='Edit quiz'></i><i id='delete-quiz' class='fas fa-trash quiz-action'  title='Delete quiz'></i>";
       buttons.classList.add("question-text", "list-buttons");
       quizText.classList.add('question-text');
       quizText.innerHTML = currentUser.quizzes[i].name;
@@ -213,34 +219,34 @@ window.onload = function() {
       row.appendChild(buttons);
       list.appendChild(row);
     }
-    theInterface.appendChild(list);
-    theInterface.appendChild(createQuizBtn);
-
-    // Add button funcionality
+    var createQuizBtn = createButton({
+      alignment: "left",
+      color: "primary",
+      size: "large",
+      text: "btn-create-new-quiz",
+      action: nameQuiz,
+      actiontarget: null,
+    });
+    appendMultipleNodes(theInterface, list, createQuizBtn);
   }
 
   /* Shows a modal window for naming your quiz then the confirm button creates the quiz */
   function nameQuiz() {
     // Create and define elements
-    var modal = document.createElement("div"), modalwindow = document.createElement("div"), modaltext = document.createElement("p"), quizInput = document.createElement("input"), confirmButton = document.createElement("button");
-    modal.classList.add("modal-background");
-    modal.id = "modal";
-    modalwindow.classList.add("modal-window");
-    modalwindow.id = "modal-window";
-    modaltext.classList.add("welcome-text");
-    modaltext.innerHTML = "Enter your quiz name:";
+    var modalWindow = createModal(), modalText = document.createElement("p"), quizInput = document.createElement("input"), confirmBtn;
+    modalText.classList.add("welcome-text");
+    modalText.innerHTML = "Enter your quiz name:";
     quizInput.type = "text";
     quizInput.id = "quiz-name";
-    confirmButton.classList.add("btn", "btn-lg", "btn-primary", "full-width-btn");
-    confirmButton.id = "create-quiz";
-    confirmButton.innerHTML = "Create quiz";
-
-    modalwindow.appendChild(modaltext);
-    modalwindow.appendChild(quizInput);
-    modalwindow.appendChild(confirmButton);
-    document.body.appendChild(modal);
-    document.body.appendChild(modalwindow);
-
+    confirmBtn = createButton({
+      alignment: "full-width",
+      size: "large",
+      action: createQuiz,
+      text: "btn-confirm-create-quiz",
+    });
+    // Append
+    appendMultipleNodes(modalWindow, modalText, quizInput, confirmBtn);
+    document.body.appendChild(modalWindow);
   }
   function createQuiz() {
     // Save quiz
@@ -248,52 +254,39 @@ window.onload = function() {
     var newQuiz = new Quiz(quizname);
     currentUser.quizzes.push(newQuiz);
     saveToLocalStorage();
-
     currentQuizIndex = currentUser.quizzes.length - 1;
-    deleteModal();
-    document.getElementById("quizname").innerHTML = newQuiz.name;
     displayAddQuestionForm();
   }
 
-  /* Simply play quiz functionality *from* the quiz list view */
-  function playQuizOption() {
+  /* Function to update the current quiz/question/whatever from the row the icon is based */
+  function getItem(item) {
     var quizRow = event.target.parentElement.parentElement;
     var quizList = quizRow.parentElement;
-    currentQuizIndex = Array.prototype.indexOf.call(quizList.children, quizRow);
-    smoothFade(playQuiz);
+    window[item] = Array.prototype.indexOf.call(quizList.children, quizRow);
+    return window[item];
   }
 
-  /* Simple edit functionality taking you to question list view */
-  function editQuiz() {
-    var quizRow = event.target.parentElement.parentElement;
-    var quizList = quizRow.parentElement;
-    currentQuizIndex = Array.prototype.indexOf.call(quizList.children, quizRow);
-    showMenu();
-    displayQuestionList();
-  }
-
-  /* Handles delete functionnality with confirm button */
-  function deleteQuiz() {
-    var quizRow = event.target.parentElement.parentElement;
-    var quizList = quizRow.parentElement;
-
-    currentQuizIndex = Array.prototype.indexOf.call(quizList.children, quizRow);
-    var modalWindow = createModal();
-    var modalText = document.createElement("p"), confirmButton = document.createElement("button"), cancelButton = document.createElement("button");
-    modalText.innerHTML = "Are you sure you want to delete the quiz?";
-    confirmButton.type = "button";
-    confirmButton.id = "confirm-delete-quiz";
-    confirmButton.classList.add("btn", "btn-lg", "btn-danger", "full-width-btn");
-    confirmButton.innerHTML = "Yes, delete";
-    cancelButton.type = "button";
-    cancelButton.id = "cancel-delete-quiz";
-    cancelButton.classList.add("btn", "btn-lg", "btn-secondary", "full-width-btn");
-    cancelButton.innerHTML = "Cancel";
-    modalWindow.appendChild(modalText);
-    modalWindow.appendChild(confirmButton);
-    modalWindow.appendChild(cancelButton);
-  }
+  /* Checks you want to actually delete the quiz */
   function deleteConfirm() {
+    var modalWindow = createModal(), modalText = document.createElement("p"), confirmBtn, cancelBtn;
+    modalText.innerHTML = "Are you sure you want to delete the quiz?";
+    confirmBtn = createButton({
+      alignment: "full-width",
+      size: "large",
+      color: "danger",
+      action: deleteQuiz,
+      text: "btn-delete-confirm",
+    });
+    cancelBtn = createButton({
+      alignment: "full-width",
+      size: "large",
+      color: "secondary",
+      action: deleteModal,
+      text: "btn-delete-cancel",
+    })
+    appendMultipleNodes(modalWindow, modalText, confirmBtn, cancelBtn);
+  }
+  function deleteQuiz() {
     currentUser.quizzes.splice(currentQuizIndex, 1);
     var quizList = document.getElementById("quiz-list")
     quizList.removeChild(quizList.childNodes[currentQuizIndex]);
@@ -301,29 +294,10 @@ window.onload = function() {
     saveToLocalStorage();
   }
 
-
   /* This function displays the add question form interface */
   function displayAddQuestionForm() {
-    /* Show menu */
-    document.getElementById("menu").classList.remove("hidden");
-
-
-    /* Clear interface */
     clearInterface(theInterface);
-
-    /* Focus on correct menu item */
-    var menuItems = document.getElementsByClassName("menu-item");
-    for (var i = 0; i<menuItems.length; i++) {
-      console.log(menuItems[i]);
-      if (menuItems[i].parentElement.id == "add-question") {
-        menuItems[i].classList.add("menu-item-active");
-      }
-      else {
-        menuItems[i].classList.remove("menu-item-active");
-      }
-    }
-
-
+    showMenu("add-question");
 
     /* Create the form */
     var form = document.createElement("form");
@@ -392,19 +366,9 @@ window.onload = function() {
     successMessage.id = "submit-success";
 
     /* Append everything */
-    form.appendChild(questionCounter);
-    form.appendChild(firstHelpText);
-    form.appendChild(questionField);
-    form.appendChild(secondHelpText);
-    form.appendChild(correctAnswerField);
     thirdHelpText.appendChild(addAnswerButton);
-    form.appendChild(thirdHelpText);
-    form.appendChild(wrongAnswerField);
-    form.appendChild(submitButton);
-    form.appendChild(submitAddAnotherButton);
-    form.appendChild(successMessage);
+    appendMultipleNodes(form, questionCounter, firstHelpText, questionField, secondHelpText, correctAnswerField, thirdHelpText, wrongAnswerField, submitButton, submitAddAnotherButton, successMessage);
     theInterface.appendChild(form);
-
     displayQuestionCounter();
   }
 
@@ -446,13 +410,12 @@ window.onload = function() {
   }
   /* The third event is the user submitting a question. When this happens we need to parse the information in the form, which could contain any number of answers. */
   function submitQuestion(event) {
-
     /* Add the quiz to the user */
-    var questiontext = document.getElementById("question-field").value;
-    var answers = document.getElementsByTagName("input");
-    var answersNumber = answers.length;
-    var correctAnswerValue = Math.floor(Math.random()*answersNumber);
-    var answersArray = [];
+    var questiontext = document.getElementById("question-field").value,
+        answers = document.getElementsByTagName("input"),
+        answersNumber = answers.length,
+        correctAnswerValue = Math.floor(Math.random()*answersNumber),
+        answersArray = [];
     for (i=1; i<answersNumber; i++) {
       answersArray.push(answers[i].value);
     }
@@ -460,16 +423,13 @@ window.onload = function() {
     var currentQuiz = currentUser.quizzes[currentQuizIndex];
     currentQuiz.addQuestion(questiontext, correctAnswerValue, answersArray);
 
-
     /* Update the question order */
     var questionOrderItem = [currentQuiz.questionOrder.length + 1, questiontext];
     currentQuiz.questionOrder.push(questionOrderItem);
-
-    console.log(currentUser);
     saveToLocalStorage();
 
     if (event.target.id == "submit-question") {
-      displayQuestionList();
+      displayQuestionList(currentQuiz);
     }
     else if (event.target.id == "submit-add-another") {
       displayQuestionCounter();
@@ -490,11 +450,8 @@ window.onload = function() {
   --- Create a new QuizQuestion with the following parameters: "question" = the form's question field value; "correctAnswer" = the value of the checked box; "answers" = the temporary array.
   */
 
-
   /* -- Clear */
   function addAnother(answers) {
-    var answerForm = document.getElementById("add-question-form");
-    var questionField = document.getElementById("question-field");
     submitSuccess();
     /* --- Clear all form fields */
     for (var answer of answers) {
@@ -502,9 +459,9 @@ window.onload = function() {
     }
     var extraAnswers = document.getElementsByClassName("new-answer-row");
     for (var answer = extraAnswers.length - 1; answer >= 0; answer--) {
-      answerForm.removeChild(extraAnswers[answer]);
+      document.getElementById("add-question-form").removeChild(extraAnswers[answer]);
     }
-    questionField.value = "";
+    document.getElementById("question-field").value = "";
   }
 
   /*
@@ -542,19 +499,11 @@ window.onload = function() {
   /* This section handles the Question List view */
 
   function displayQuestionList() {
-    /* Clear interface */
+    var currentQuiz = currentUser.quizzes[currentQuizIndex],
+        questionOrder = currentQuiz.questionOrder;
     clearInterface(theInterface);
-    var menuItems = document.getElementsByClassName("menu-item");
-    var questionOrder = currentUser.quizzes[currentQuizIndex].questionOrder;
-    for (var i = 0; i<menuItems.length; i++) {
-      console.log(menuItems[i]);
-      if (menuItems[i].parentElement.id == "manage-questions") {
-        menuItems[i].classList.add("menu-item-active");
-      }
-      else {
-        menuItems[i].classList.remove("menu-item-active");
-      }
-    }
+    showMenu("manage-questions");
+
     var list = document.createElement("ul");
     list.classList.add("question-list");
     for (i=0; i<questionOrder.length; i++) {
@@ -586,7 +535,6 @@ window.onload = function() {
       questionOrderArray[i] = [i+1, list[i].nextSibling.innerHTML];
     }
     localStorage.questionOrder = JSON.stringify(questionOrderArray);
-    console.log(localStorage.questionOrder);
   }
 
   /* This section handles the actual quiz */
@@ -597,10 +545,6 @@ window.onload = function() {
 
     /* Clear interface */
     clearInterface(theInterface);
-    var menuItems = document.getElementsByClassName("menu-item");
-    for (var i = 0; i<menuItems.length; i++) {
-        menuItems[i].classList.remove("menu-item-active");
-      }
 
     /* Get the quiz */
     var quiz = currentUser.quizzes[currentQuizIndex];
@@ -622,16 +566,9 @@ window.onload = function() {
     question.id = "quiz-question";
     question.innerHTML = questionOrder[0][1];
 
-
-
-    theInterface.appendChild(quizTitle);
-    theInterface.appendChild(questionNumberText);
-    theInterface.appendChild(question);
-
     /* Answers container */
     var answersContainer = document.createElement("div");
     answersContainer.id = "answers-container";
-    theInterface.appendChild(answersContainer);
 
     /* Quiz control contaiiner */
     var quizControl = document.createElement("div");
@@ -642,15 +579,12 @@ window.onload = function() {
     nextButton.type = "button";
     nextButton.classList.add("btn", "btn-primary", "btn-large");
     nextButton.innerHTML = "Next question >";
-    nextButton.id = "next-button"
-    quizControl.appendChild(nextButton);
-    theInterface.appendChild(quizControl);
+    nextButton.id = "next-button";
 
-
+    appendMultipleNodes(theInterface, quizTitle, questionNumberText, question, answersContainer, quizControl);
 
     /* Load answers */
     loadAnswers(0, questionOrder, quiz, theInterface, answersContainer);
-
 
     /* Add event listeners */
     document.body.addEventListener("click", function(event) {
@@ -712,12 +646,10 @@ window.onload = function() {
     questionNumberText.innerHTML = "Question " + (questionNumber + 1);
     questionNumberText.classList.remove("faded-out");
 
-
     var questionText = document.getElementById("quiz-question");
     questionText.innerHTML = questionOrder[questionNumber][1];
     questionText.classList.remove("faded-out");
   }
-
 
   function loadQuizControl(questionNumber, questionlist, direction) {
     var quizControl = document.getElementById("quiz-control");
@@ -842,10 +774,7 @@ window.onload = function() {
   }
 
   function seeQuizResults(questionlist, quiz) {
-
-    /* Clear interface */
     clearInterface(theInterface);
-
 
     /* Check answers and create array of corrections */
     var score = 0;
@@ -863,9 +792,7 @@ window.onload = function() {
         var newCorrection = [theQuestion, whatTheyAnswered, correctAnswer];
         corrections.push(newCorrection);
       }
-      console.log("Question " + i + " was " + quizQuestion[0].question);
     }
-    console.log("The final score is " + score);
     /* Calculate percentage */
     var percentage = score / questionlist.length;
     var percentageRounded = Math.round(percentage*100);
@@ -893,12 +820,7 @@ window.onload = function() {
           commentary.innerHTML = "That was awful.";
           break;
     }
-
-    theInterface.appendChild(quizTitle);
-    theInterface.appendChild(commentary);
-    theInterface.appendChild(scoreDisplay);
-
-
+    appendMultipleNodes(theInterface, quizTitle, commentary, scoreDisplay);
 
     if (corrections.length > 0) {
       var correctionsDisplay = document.createElement("p");
@@ -924,7 +846,6 @@ window.onload = function() {
     theInterface.appendChild(quizControl);
   }
 
-
   /* This function just saves the user's details to local storage */
   function saveToLocalStorage() {
     var userPosition = localStorageUsers.findIndex(function(user) {
@@ -945,7 +866,8 @@ window.onload = function() {
 
   /* This function clears the view whenever a menu button is clicked */
   function clearInterface(interface) {
-    while (interface.firstChild) {interface.removeChild(interface.firstChild)}
+    while (interface.firstChild) {interface.removeChild(interface.firstChild)};
+    if (document.getElementById("modal") !== null) {deleteModal();}
   }
 
   /* This function just creates a modal window */
@@ -961,6 +883,7 @@ window.onload = function() {
     return modalwindow;
   }
 
+  /* Deletes a modal window */
   function deleteModal() {
     var modal = document.getElementById("modal");
     var modalwindow = document.getElementById("modal-window");
@@ -968,12 +891,32 @@ window.onload = function() {
     document.body.removeChild(modalwindow);
   }
 
-  function showMenu() {
-    /* Show menu */
-    document.getElementById("menu").classList.remove("hidden");
+  /* Shows the menu with the focus on the correct item */
+  function showMenu(focus) {
+    if (document.getElementById("menu").classList.contains("hidden")) {
+      document.getElementById("menu").classList.remove("hidden");
+    }
     document.getElementById("quizname").innerHTML = currentUser.quizzes[currentQuizIndex].name;
+    if (focus) {
+      var menuItems = document.getElementsByClassName("menu-item");
+      for (var i = 0; i<menuItems.length; i++) {
+        if (menuItems[i].parentElement.id == focus) {
+          menuItems[i].classList.add("menu-item-active");
+        }
+        else {
+          menuItems[i].classList.remove("menu-item-active");
+        }
+      }
+    }
   }
 
+  function appendMultipleNodes(){
+    var args = [].slice.call(arguments);
+    for (var x = 1; x < args.length; x++){
+        args[0].appendChild(args[x])
+    }
+    return args[0]
+  }
 
   function transitionEndEventName () {
       var i,
@@ -993,5 +936,51 @@ window.onload = function() {
       }
 
       //TODO: throw 'TransitionEnd event is not supported in this browser';
+  }
+
+  function createButton(config) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = config.action;
+    btn.classList.add("btn");
+
+    /* Handles text */
+    if (config.text === undefined) {
+      btn.innerHTML = textValues["default-btn"];
+    }
+    btn.innerHTML = textValues[config.text];
+
+    /* Handles button colour */
+    if (config.color === undefined) {
+      config.color = "primary";
+    }
+    btn.classList.add("btn-"+config.color);
+
+    /* Handles button size */
+    if (config.size === "large") {
+      btn.classList.add("btn-lg");
+    }
+
+    if (config.actiontarget === undefined) {
+      config.actiontarget = null;
+    }
+    /* Handles functionality */
+    eventListeners.push([btn.id, config.action, config.actiontarget, config.arguments]);
+
+    var element = btn;
+    /* Handles button alignment */
+    if (config.alignment === undefined) {
+      config.alignment = "left";
+    }
+    if (config.alignment == "center") {
+      var wrapper = document.createElement("div");
+      wrapper.id = "btn-center-wrapper";
+      wrapper.appendChild(btn);
+      element = wrapper;
+    }
+    else {
+      element.classList.add("btn-"+config.alignment);
+    }
+    return element;
   }
 }

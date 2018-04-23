@@ -55,6 +55,46 @@ a:hover {
   opacity: 0;
 }
 
+/* Button styles */
+.btn {
+  margin: 20px 10px;
+}
+
+.btn-left {
+  float: left;
+}
+
+.btn-right {
+  float: right;
+}
+
+.btn-full-width {
+  width: 100%;
+  margin: 5px 0px;
+}
+
+.btn-center-wrapper {
+  text-align: center;
+  margin: 20px 0px;
+}
+
+.btn-center-wrapper button {
+  margin: 0px 10px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .welcome-text {
   font-size: 1.3em;
   text-align: center;
@@ -64,11 +104,6 @@ a:hover {
   max-width: 300px;
   text-align: center;
   margin: 20px auto;
-}
-
-.full-width-btn {
-  width: 100%;
-  margin: 5px 0px;
 }
 
 .login-page input {
@@ -228,7 +263,7 @@ input:focus, textarea:focus {
   color: #fff;
 }
 
-.item-action {
+.quiz-action {
   cursor: pointer;
   color: #136f61;
 }
@@ -261,6 +296,20 @@ input:focus, textarea:focus {
 .submit {
   float: right;
   margin: 20px 10px;
+}
+
+.btn-left {
+  float: left;
+  margin: 20px 10px;
+}
+
+.btn-right {
+  float: right;
+  margin: 20px 10px;
+}
+
+.btn-center {
+  text-align: center;
 }
 
 .btn-success {
